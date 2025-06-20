@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  qt_dev_env:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USERNAME: dev
+        USER_UID: 1000
+        USER_GID: 1000
+    volumes:
+      # Mount your project directory into the container
+      - .:/home/dev/app
+      # Mount X11 socket for GUI display
+      # - /tmp/.X11-unix:/tmp/.X11-unix
+      # Mount .Xauthority for X11 authentication
+      # - ~/.Xauthority:/home/dev/.Xauthority:ro
+    environment:
+      # Pass DISPLAY environment variable to the container
+      # - DISPLAY=${DISPLAY}
+      - DISPLAY=host.docker.internal:0
+      # Set user and group for consistency (important for file permissions)
+      - QT_DEBUG_PLUGINS=1 # Enable verbose output for Qt plugin loading issues
+    # Optional: map ports if your Qt app communicates over a network
+    # ports:
+    #   - "8080:8080"
+    # To run the container as the non-root user specified in Dockerfile
+    user: "${USER_UID:-1000}:${USER_GID:-1000}"
+    # Keep the container running in the background for VS Code to attach
+    command: sleep infinity
