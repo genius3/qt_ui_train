@@ -1,3 +1,5 @@
+# !!!!! this setup using XQuartz does not work for GLX library which is used by QT for qml rending
+
 # Use a base image with a recent Ubuntu version
 FROM ubuntu:22.04
 
@@ -10,6 +12,11 @@ RUN apt-get update && apt-get install -y \
     cmake \
     git \
     libgl-dev \
+    libgl1-mesa-dev \
+    libglu1-mesa-dev \
+    libglx-mesa0 \
+    libopengl0 \
+    mesa-utils \
     libxkbcommon-x11-dev \
     libxcb-icccm4 \
     libxcb-image0 \
@@ -31,8 +38,14 @@ RUN apt-get update && apt-get install -y \
     clang \
     lldb \
     # Add any other Qt modules you need, e.g.:
+    qml6-module-qtquick \
+    qml6-module-qtquick-window \
+    qml6-module-qtquick-controls \
+    qml6-module-qtqml-workerscript \
     # qt6-charts-dev \
-    # qt6-declarative-dev \
+    qt6-declarative-dev \
+    qt6-declarative-dev-tools \
+    qt6-qmltooling-plugins \
     # qt6-quickcontrols2-dev \
     # qt6-svg-dev \
     # Add any other libraries specific to your application
@@ -56,4 +69,6 @@ WORKDIR /home/$USERNAME/app
 
 # Set DISPLAY environment variable for GUI applications
 # This assumes you will expose your X server from the host
+ENV QT_QUICK_BACKEND=software
+
 ENV DISPLAY=:0

@@ -1,38 +1,69 @@
 {
-    "name": "Qt Development Environment",
-    "dockerComposeFile": "../docker-compose.yml", // Path to your docker-compose.yml
-    "service": "qt_dev_env", // Name of the service in docker-compose.yml
-    "workspaceFolder": "/home/dev/app", // Your project's working directory in the container
+    "name": "Qt6 Development Container with VNC",
+    "build": {
+        "dockerfile": "../Dockerfile_chatgpt",
+        "args": {
+            "USERNAME": "dev",
+            "USER_UID": "1000",
+            "USER_GID": "1000"
+        }
+    },
     "customizations": {
         "vscode": {
             "extensions": [
                 "ms-vscode.cpptools",
                 "ms-vscode.cmake-tools",
-                "mhutchie.git-graph",
-                "jeremy-long.vscode-qt-tools" // Optional: Qt VSCode Tools
+                "ms-vscode.remote-explorer",
+                "ms-vscode.remote-repositories",
+                "ms-vscode.remote-server",
+                "ms-vscode.remote-ssh",
+                "ms-vscode.remote-ssh-edit",
+                "ms-vscode.remote-wsl",
+                "ms-vscode.sublime-keybindings",
+                "ms-vscode.vs-code-remote-containers",
+                "qt.vscode-qt-tools",
+                "vscode-icons-team.vscode-icons",
+                "hars.vscode-qml" // If using QML
             ],
             "settings": {
-                // Settings specific to C++ and CMake within the container
                 "cmake.configureSettings": {
-                    "CMAKE_BUILD_TYPE": "Debug"
+                    // Adjust CMAKE_PREFIX_PATH if Qt is installed in a non-standard location
+                    // For Qt6 installed via apt, it's usually found automatically or within /usr/lib/x86_64-linux-gnu/cmake/Qt6/
+                    // You might need to verify the exact path in your running container.
+                    "CMAKE_PREFIX_PATH": "/usr/lib/x86_64-linux-gnu/cmake/Qt6/"
                 },
                 "terminal.integrated.defaultProfile.linux": "bash",
                 "terminal.integrated.profiles.linux": {
                     "bash": {
                         "path": "/bin/bash"
                     }
-                },
-                // Ensure X11 forwarding works smoothly
-                "terminal.integrated.env.linux": {
-                    // "DISPLAY": ":0"
-                    "DISPLAY": "host.docker.internal:0"
                 }
             }
         }
     },
-    // Port forwarding (if your app needs to expose network services)
-    // "forwardPorts": [8080],
-
-    // Post-create command to run after the container is built and started
-    "postCreateCommand": "sudo chmod -R u+rwX /home/dev/app && sudo chown -R dev:dev/home/dev/app"
+    "remoteUser": "dev",
+    "runArgs": [
+        "--privileged"
+        // ,  Might be needed for some GUI interactions or permissions, but use with caution.
+        // For sound (optional, requires PulseAudio on host)
+        // "-v", "/run/user/$(id -u)/pulse:/run/user/$(id -u)/pulse",
+        // "--env", "PULSE_SERVER=unix:/run/user/$(id -u)/pulse/native",
+        // "--env", "XDG_RUNTIME_DIR=/run/user/$(id -u)",
+        // "--user", "$(id -u):$(id -g)"
+    ],
+    "portsAttributes": {
+        "5901": {
+            "label": "VNC Port",
+            "onAutoForward": "notify"
+        },
+        "8080": {
+            "label": "noVNC Web Client",
+            "onAutoForward": "notify"
+        }
+    },
+    "mounts": [ "source=${localWorkspaceFolder},target=/home/dev/app,type=bind,consistency=cached" ],
+    // "postCreateCommand": "sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get clean && sudo chmod 777 /tmp/.X11-unix",
+    "containerEnv": {
+        "DISPLAY": ":1"
+    }
 }

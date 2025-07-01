@@ -1,0 +1,98 @@
+# Use a base image with a recent Ubuntu version
+FROM ubuntu:22.04
+
+# Set environment variables for non-interactive installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update package lists and install basic utilities
+RUN apt-get update --fix-missing && \
+    apt-get install -y \
+    curl \
+    wget \
+    git \
+    sudo && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install build tools and common development libraries
+RUN apt-get update --fix-missing && \
+    apt-get install -y \
+    build-essential \
+    cmake \
+    libgl1-mesa-dev \
+    libglu1-mesa-dev \
+    mesa-utils \
+    locales \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Qt6 development packages
+RUN apt-get update --fix-missing && \
+    apt-get install -y \
+    qt6-base-dev \
+    qt6-base-dev-tools \
+    qt6-tools-dev \
+    qt6-tools-dev-tools \
+    # qt6-base-private-dev \
+    qt6-declarative-dev \
+    qt6-declarative-dev-tools \
+    # qt6-declarative-private-dev \
+    qt6-qmltooling-plugins \
+    # qt6-tools \
+    # libqt6svg6-dev \
+    libxcb-xinerama0 \
+    libxcb-randr0 \
+    # libxcb-image0 \
+    # libxcb-shm0 \
+    # libxcb-keysyms1 \
+    # libxcb-icccm4 \
+    # libxcb-render-util0 \
+    # libxcb-util1 \
+    # libxcb-sync1 \
+    # libxcb-xfixes0 \
+    # libxcb-shape0 \
+    # libxcb-xkb1 && \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install VNC and desktop environment packages
+RUN apt-get update --fix-missing && \
+    apt-get install -y \
+    x11vnc \
+    novnc \
+    websockify \
+    xfce4 \
+    xfce4-goodies \
+    tightvncserver && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set up a non-root user (recommended for security)
+ARG USERNAME=developer
+ARG USER_UID=1000
+ARG USER_GID=1000
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    && echo $USERNAME ALL=\(ALL\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+USER $USERNAME
+
+# Set up VNC server
+ENV VNC_RESOLUTION="1280x800"
+ENV VNC_DEPTH="24"
+ENV VNC_PW=password
+ENV DISPLAY=:1
+
+# Create a directory for VNC logs and scripts
+RUN mkdir -p /home/$USERNAME/.vnc
+
+# Add an entrypoint script to start VNC server and desktop environment
+RUN mkdir -p /home/$USERNAME/opt
+COPY ./vnc_entrypoint.sh /home/$USERNAME/opt/
+
+# Expose VNC port (5901 for display :1) and noVNC (web VNC) port
+EXPOSE 5901 8080
+
+# Set working directory
+WORKDIR /home/$USERNAME/project
+
+# Default command to run when the container starts (can be overridden by VS Code)
+ENTRYPOINT ["/home/$USERNAME/opt/vnc_entrypoint.sh"]
+CMD ["bash"]

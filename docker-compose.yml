@@ -4,7 +4,7 @@ services:
   qt_dev_env:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile_gemini
       args:
         USERNAME: dev
         USER_UID: 1000

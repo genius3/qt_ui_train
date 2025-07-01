@@ -1,0 +1,38 @@
+{
+    "name": "Qt Development Environment",
+    "dockerComposeFile": "../docker-compose.yml", // Path to your docker-compose.yml
+    "service": "qt_dev_env", // Name of the service in docker-compose.yml
+    "workspaceFolder": "/home/dev/app", // Your project's working directory in the container
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-vscode.cmake-tools",
+                "mhutchie.git-graph",
+                "jeremy-long.vscode-qt-tools" // Optional: Qt VSCode Tools
+            ],
+            "settings": {
+                // Settings specific to C++ and CMake within the container
+                "cmake.configureSettings": {
+                    "CMAKE_BUILD_TYPE": "Debug"
+                },
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "terminal.integrated.profiles.linux": {
+                    "bash": {
+                        "path": "/bin/bash"
+                    }
+                },
+                // Ensure X11 forwarding works smoothly
+                "terminal.integrated.env.linux": {
+                    // "DISPLAY": ":0"
+                    "DISPLAY": "host.docker.internal:0"
+                }
+            }
+        }
+    },
+    // Port forwarding (if your app needs to expose network services)
+    // "forwardPorts": [8080],
+
+    // Post-create command to run after the container is built and started
+    "postCreateCommand": "sudo chmod -R u+rwX /home/dev/app && sudo chown -R dev:dev/home/dev/app"
+}

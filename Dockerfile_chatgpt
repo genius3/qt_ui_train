@@ -1,0 +1,43 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+  vim tmux sudo git wget curl cmake build-essential  \
+  xvfb
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+  qt6-base-dev \ 
+  qt6-declarative-dev \
+  qt6-tools-dev-tools \
+  qt6-tools-dev \
+  qml-module-qtqml \
+  qt6-qmltooling-plugins \
+  qml6-module-qtquick \
+  qml6-module-qtquick-window \
+  libgl1-mesa-glx \
+  libgl1-mesa-dev \
+  libopengl-dev \
+  xfce4 \
+  xfce4-goodies \
+  tightvncserver \
+  dbus-x11 \
+  xterm \
+  x11-xserver-utils \
+  && apt-get clean
+
+# Set up user
+ARG USER=dev
+ARG UID=1000
+RUN useradd -m -s /bin/bash -u $UID $USER && echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Setup VNC
+COPY vnc_entrypoint.sh /home/$USER/opt/vnc_entrypoint.sh
+RUN  chown $USER:$USER /home/$USER/opt/vnc_entrypoint.sh
+
+USER $USER
+ENV DISPLAY=:1
+EXPOSE 5901
+
+CMD ["/home/dev/opt/vnc_entrypoint.sh"]
